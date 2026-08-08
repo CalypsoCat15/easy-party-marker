@@ -4,6 +4,8 @@ A customizable map-marker addon for **World of Warcraft Classic Era**, designed 
 
 Easy Party Marker makes party members and your own position much easier to spot on both the minimap and the large world map. Its signature defaults are a vivid pink party marker and a mint/seafoam directional player arrow.
 
+Version 2.1 is completely standalone: **Questie is no longer required.**
+
 ## Features
 
 - Bright party markers on the minimap and large map
@@ -14,17 +16,16 @@ Easy Party Marker makes party members and your own position much easier to spot 
 - Live customization menu; changes appear immediately
 - One-click **Lisa's Defaults** reset
 - North-up minimap behavior (map rotation is intentionally disabled for now)
+- A bundled map-position helper, so no other addon is required
 
 ## Requirements
 
 - World of Warcraft Classic Era
-- [Questie](https://github.com/Questie/Questie) installed and enabled
-
-Easy Party Marker uses Questie's included map-position helper to place its custom party markers correctly.
+- No required addons
 
 ## Install
 
-1. Download `EasyPartyMarker-v2.0.0.zip` from the [latest release](https://github.com/CalypsoCat15/easy-party-marker/releases/latest).
+1. Download `EasyPartyMarker-v2.1.0.zip` from the [latest release](https://github.com/CalypsoCat15/easy-party-marker/releases/latest).
 2. Completely exit World of Warcraft.
 3. Open the ZIP and copy the entire `EasyPartyMarker` folder into:
 
@@ -32,7 +33,7 @@ Easy Party Marker uses Questie's included map-position helper to place its custo
 
 4. Start WoW Classic Era.
 5. On the character-selection screen, click **AddOns**.
-6. Make sure both **Questie** and **Easy Party Marker** are checked.
+6. Make sure **Easy Party Marker** is checked.
 
 ## Customize
 
@@ -52,4 +53,8 @@ Easy Party Marker uses Questie's included map-position helper to place its custo
 ## Privacy
 
 This repository contains only addon code and marker textures. It does not contain character names, account information, saved settings, screenshots, or other personal game data.
+
+## Bundled library
+
+Easy Party Marker embeds [HereBeDragons 2.16](https://github.com/Nevcairiel/HereBeDragons/tree/2.16-release) for map-coordinate handling. See `THIRD_PARTY_NOTICES.txt` for attribution and license information.
 

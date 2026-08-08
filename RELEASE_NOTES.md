@@ -1,9 +1,11 @@
-# Easy Party Marker 2.0.0
+# Easy Party Marker 2.1.0
 
-The first public release of Easy Party Marker for World of Warcraft Classic Era.
+The standalone release of Easy Party Marker for World of Warcraft Classic Era.
 
 ## Highlights
 
+- Questie is no longer required
+- Includes its own map-position helper for party markers
 - Vivid, resizable party markers on the minimap and large world map
 - A directional player arrow that replaces the original player icon
 - Independent size and color controls for party and player markers
@@ -13,10 +15,9 @@ The first public release of Easy Party Marker for World of Warcraft Classic Era.
 
 ## Installation
 
-1. Download `EasyPartyMarker-v2.0.0.zip` below.
+1. Download `EasyPartyMarker-v2.1.0.zip` below.
 2. Completely exit World of Warcraft.
 3. Open the ZIP and copy the entire `EasyPartyMarker` folder into your WoW Classic Era `Interface\AddOns` folder.
-4. Start the game and enable both **Questie** and **Easy Party Marker** on the character-selection screen.
+4. Start the game and enable **Easy Party Marker** on the character-selection screen.
 
-Questie is required because Easy Party Marker uses its included map-position helper.
-
+No other addon is required.

@@ -5,8 +5,8 @@ _G.EasyPartyMarker = API
 
 local POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrow"
 
-local HBD = LibStub and LibStub("HereBeDragonsQuestie-2.0", true)
-local Pins = LibStub and LibStub("HereBeDragonsQuestie-Pins-2.0", true)
+local HBD = LibStub and LibStub("HereBeDragons-2.0", true)
+local Pins = LibStub and LibStub("HereBeDragons-Pins-2.0", true)
 
 local DEFAULTS = {
     enabled = true,
@@ -617,7 +617,7 @@ updateFrame:SetScript("OnEvent", function(_, event, loadedAddon)
         DisableMinimapRotation()
 
         if not HBD or not Pins then
-            Print("Questie's map helper was not available. Please make sure Questie is enabled.")
+            Print("The bundled map helper could not be loaded. Please reinstall Easy Party Marker.")
         end
     elseif event == "ADDON_LOADED" and EasyPartyMarkerDB then
         HookWorldMapPointer()
