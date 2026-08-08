@@ -1,0 +1,7 @@
+# Local packaging and test artifacts
+*.zip
+*.tmp
+*.bak
+Thumbs.db
+Desktop.ini
+

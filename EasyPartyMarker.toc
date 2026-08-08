@@ -1,0 +1,10 @@
+## Interface: 11509
+## Title: Easy Party Marker
+## Notes: Custom party and player markers for the minimap and large map.
+## Author: Codex
+## Version: 2.0.0
+## Dependencies: Questie
+## SavedVariables: EasyPartyMarkerDB
+
+EasyPartyMarker.lua
+EasyPartyMarker_Options.lua
