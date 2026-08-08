@@ -44,7 +44,9 @@ local POINTER_COLOR_SUFFIX = {
     white = "White",
 }
 
-local WORLD_PLAYER_PIN_SIZES = { 12, 16, 20, 24, 30 }
+-- The arrow artwork has transparent padding, so these native world-map pin
+-- sizes are intentionally generous. The visible arrow is smaller than the box.
+local WORLD_PLAYER_PIN_SIZES = { 30, 40, 52, 66, 82 }
 
 local COLOR_ORDER = { "mint", "pink", "cyan", "lime", "yellow", "orange", "purple", "white" }
 
@@ -75,7 +77,9 @@ end
 
 local function GetWorldPlayerPointerTexture()
     local settings = EasyPartyMarkerDB or DEFAULTS
-    return GetPlayerPointerTextureFor(settings.selfColor, settings.selfWorldSize)
+    -- Use the fullest artwork on the large map and let the native pin size
+    -- control its screen size. This keeps even the smallest option legible.
+    return GetPlayerPointerTextureFor(settings.selfColor, 5)
 end
 
 local function GetWorldPlayerPinSize()
