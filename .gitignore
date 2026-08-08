@@ -1,5 +1,6 @@
 # Local packaging and test artifacts
 *.zip
+!release-assets/EasyPartyMarker-v2.0.0.zip
 *.tmp
 *.bak
 Thumbs.db

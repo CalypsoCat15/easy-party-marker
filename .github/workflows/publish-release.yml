@@ -1,0 +1,36 @@
+name: Publish release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tagged addon
+        uses: actions/checkout@v4
+
+      - name: Publish the ready-to-install ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          asset="release-assets/EasyPartyMarker-${version}.zip"
+
+          if [[ ! -f "$asset" ]]; then
+            echo "Release asset not found: $asset"
+            exit 1
+          fi
+
+          gh release create "$GITHUB_REF_NAME" \
+            "$asset#EasyPartyMarker ${version} (ready to install)" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Easy Party Marker ${version}" \
+            --notes-file RELEASE_NOTES.md
+
