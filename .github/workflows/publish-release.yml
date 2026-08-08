@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the tagged addon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Publish the ready-to-install ZIP
         env:
@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           version="${GITHUB_REF_NAME#v}"
-          asset="release-assets/EasyPartyMarker-${version}.zip"
+          asset="release-assets/EasyPartyMarker-${GITHUB_REF_NAME}.zip"
 
           if [[ ! -f "$asset" ]]; then
             echo "Release asset not found: $asset"
@@ -33,4 +33,3 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --title "Easy Party Marker ${version}" \
             --notes-file RELEASE_NOTES.md
-
