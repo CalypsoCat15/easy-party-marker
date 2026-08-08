@@ -4,9 +4,13 @@ local API = _G.EasyPartyMarker
 local panel
 local minimapButton
 local partySlider
+local partyWorldSlider
 local playerSlider
+local playerWorldSlider
 local partyValue
+local partyWorldValue
 local playerValue
+local playerWorldValue
 local partyPreview
 local playerPreview
 local partySwatches = {}
@@ -81,9 +85,17 @@ local function RefreshOptions()
         partySlider:SetValue(settings.size)
         partyValue:SetText(tostring(settings.size))
     end
+    if partyWorldSlider then
+        partyWorldSlider:SetValue(settings.worldSize)
+        partyWorldValue:SetText(tostring(settings.worldSize))
+    end
     if playerSlider then
         playerSlider:SetValue(settings.selfSize)
         playerValue:SetText(PLAYER_SIZE_NAMES[settings.selfSize] or "Medium")
+    end
+    if playerWorldSlider then
+        playerWorldSlider:SetValue(settings.selfWorldSize)
+        playerWorldValue:SetText(PLAYER_SIZE_NAMES[settings.selfWorldSize] or "Large")
     end
 
     UpdateSwatches(partySwatches, settings.color)
@@ -110,17 +122,23 @@ end
 
 API.RefreshOptions = RefreshOptions
 
-local function CreateSwatch(parent, colorName, color, onClick)
+local function CreateSwatch(parent, colorName, color, onClick, style)
     local button = CreateFrame("Button", nil, parent)
     button:SetSize(28, 28)
     button.colorName = colorName
     AddBorder(button, 2)
 
     local fill = button:CreateTexture(nil, "ARTWORK")
-    fill:SetPoint("TOPLEFT", 4, -4)
-    fill:SetPoint("BOTTOMRIGHT", -4, 4)
-    fill:SetColorTexture(color[1], color[2], color[3], 1)
-    AddRoundMask(button, fill)
+    if style == "arrow" then
+        fill:SetPoint("CENTER")
+        fill:SetSize(36, 36)
+        fill:SetTexture(API.GetPlayerPointerTextureFor(colorName, 5))
+    else
+        fill:SetPoint("TOPLEFT", 4, -4)
+        fill:SetPoint("BOTTOMRIGHT", -4, 4)
+        fill:SetColorTexture(color[1], color[2], color[3], 1)
+        AddRoundMask(button, fill)
+    end
 
     button:SetScript("OnClick", function()
         onClick(colorName)
@@ -135,24 +153,24 @@ local function CreateSwatch(parent, colorName, color, onClick)
     return button
 end
 
-local function CreateColorRow(parent, y, labelText, onClick, destination)
+local function CreateColorRow(parent, y, labelText, onClick, destination, style)
     local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     label:SetPoint("TOPLEFT", 34, y)
     label:SetText(labelText)
 
     local colors, order = API.GetColors()
     for index, colorName in ipairs(order) do
-        local button = CreateSwatch(parent, colorName, colors[colorName], onClick)
+        local button = CreateSwatch(parent, colorName, colors[colorName], onClick, style)
         button:SetPoint("TOPLEFT", 38 + ((index - 1) * 43), y - 25)
         destination[#destination + 1] = button
     end
 end
 
-local function StyleSlider(slider, lowText, highText)
-    slider:SetMinMaxValues(lowText == "6" and 6 or 1, highText == "30" and 30 or 5)
+local function StyleSlider(slider, minValue, maxValue, lowText, highText, width)
+    slider:SetMinMaxValues(minValue, maxValue)
     slider:SetValueStep(1)
     if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
-    slider:SetWidth(280)
+    slider:SetWidth(width or 150)
     local name = slider:GetName()
     if name then
         local low = _G[name .. "Low"]
@@ -166,7 +184,7 @@ end
 
 local function BuildPanel()
     panel = CreateFrame("Frame", "EasyPartyMarkerOptionsPanel", UIParent)
-    panel:SetSize(420, 450)
+    panel:SetSize(470, 450)
     panel:SetPoint("CENTER")
     panel:SetFrameStrata("DIALOG")
     panel:SetClampedToScreen(true)
@@ -201,17 +219,17 @@ local function BuildPanel()
     partyHeading:SetText("Party marker")
     partyHeading:SetTextColor(1, 0.20, 0.65)
 
-    CreateColorRow(panel, -105, "Color", API.SetPartyColor, partySwatches)
+    CreateColorRow(panel, -105, "Color", API.SetPartyColor, partySwatches, "dot")
 
     local partySizeLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     partySizeLabel:SetPoint("TOPLEFT", 34, -166)
-    partySizeLabel:SetText("Size")
+    partySizeLabel:SetText("Minimap size")
     partyValue = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     partyValue:SetPoint("LEFT", partySizeLabel, "RIGHT", 10, 0)
 
     partySlider = CreateFrame("Slider", "EasyPartyMarkerPartySizeSlider", panel, "OptionsSliderTemplate")
-    partySlider:SetPoint("TOPLEFT", 63, -188)
-    StyleSlider(partySlider, "6", "30")
+    partySlider:SetPoint("TOPLEFT", 45, -188)
+    StyleSlider(partySlider, 6, 30, "6", "30", 150)
     partySlider:SetScript("OnValueChanged", function(_, value)
         if updating then return end
         local rounded = math.floor(value + 0.5)
@@ -220,27 +238,61 @@ local function BuildPanel()
         RefreshOptions()
     end)
 
+    local partyWorldSizeLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    partyWorldSizeLabel:SetPoint("TOPLEFT", 254, -166)
+    partyWorldSizeLabel:SetText("Large map size")
+    partyWorldValue = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    partyWorldValue:SetPoint("LEFT", partyWorldSizeLabel, "RIGHT", 10, 0)
+
+    partyWorldSlider = CreateFrame("Slider", "EasyPartyMarkerPartyWorldSizeSlider", panel, "OptionsSliderTemplate")
+    partyWorldSlider:SetPoint("TOPLEFT", 265, -188)
+    StyleSlider(partyWorldSlider, 6, 30, "6", "30", 150)
+    partyWorldSlider:SetScript("OnValueChanged", function(_, value)
+        if updating then return end
+        local rounded = math.floor(value + 0.5)
+        partyWorldValue:SetText(tostring(rounded))
+        API.SetPartyWorldSize(rounded)
+        RefreshOptions()
+    end)
+
     local playerHeading = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     playerHeading:SetPoint("TOPLEFT", 26, -235)
     playerHeading:SetText("Your directional arrow")
     playerHeading:SetTextColor(0.38, 0.90, 0.71)
 
-    CreateColorRow(panel, -268, "Color", API.SetPlayerColor, playerSwatches)
+    CreateColorRow(panel, -268, "Color", API.SetPlayerColor, playerSwatches, "arrow")
 
     local playerSizeLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     playerSizeLabel:SetPoint("TOPLEFT", 34, -329)
-    playerSizeLabel:SetText("Size")
+    playerSizeLabel:SetText("Minimap size")
     playerValue = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     playerValue:SetPoint("LEFT", playerSizeLabel, "RIGHT", 10, 0)
 
     playerSlider = CreateFrame("Slider", "EasyPartyMarkerPlayerSizeSlider", panel, "OptionsSliderTemplate")
-    playerSlider:SetPoint("TOPLEFT", 63, -351)
-    StyleSlider(playerSlider, "1", "5")
+    playerSlider:SetPoint("TOPLEFT", 45, -351)
+    StyleSlider(playerSlider, 1, 5, "1", "5", 150)
     playerSlider:SetScript("OnValueChanged", function(_, value)
         if updating then return end
         local rounded = math.floor(value + 0.5)
         playerValue:SetText(PLAYER_SIZE_NAMES[rounded] or "Medium")
         API.SetPlayerSize(rounded)
+        RefreshOptions()
+    end)
+
+    local playerWorldSizeLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    playerWorldSizeLabel:SetPoint("TOPLEFT", 254, -329)
+    playerWorldSizeLabel:SetText("Large map size")
+    playerWorldValue = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    playerWorldValue:SetPoint("LEFT", playerWorldSizeLabel, "RIGHT", 10, 0)
+
+    playerWorldSlider = CreateFrame("Slider", "EasyPartyMarkerPlayerWorldSizeSlider", panel, "OptionsSliderTemplate")
+    playerWorldSlider:SetPoint("TOPLEFT", 265, -351)
+    StyleSlider(playerWorldSlider, 1, 5, "1", "5", 150)
+    playerWorldSlider:SetScript("OnValueChanged", function(_, value)
+        if updating then return end
+        local rounded = math.floor(value + 0.5)
+        playerWorldValue:SetText(PLAYER_SIZE_NAMES[rounded] or "Large")
+        API.SetPlayerWorldSize(rounded)
         RefreshOptions()
     end)
 
@@ -261,7 +313,7 @@ local function BuildPanel()
 
     local instant = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     instant:SetPoint("BOTTOM", 0, 54)
-    instant:SetText("Changes apply instantly to the minimap and large map")
+    instant:SetText("Minimap and large-map sizes can be adjusted separately")
     instant:SetTextColor(0.72, 0.82, 0.78)
 
     local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")

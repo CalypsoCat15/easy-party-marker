@@ -2,7 +2,7 @@
 ## Title: Easy Party Marker
 ## Notes: Standalone custom party and player markers for the minimap and large map.
 ## Author: CalypsoCat15
-## Version: 2.1.1
+## Version: 2.2.0
 ## SavedVariables: EasyPartyMarkerDB
 ## X-Embeds: HereBeDragons, LibStub, CallbackHandler-1.0
 

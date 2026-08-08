@@ -11,13 +11,15 @@ local Pins = LibStub and LibStub("HereBeDragons-Pins-2.0", true)
 local DEFAULTS = {
     enabled = true,
     size = 10,
+    worldSize = 14,
     color = "pink",
     selfEnabled = true,
     selfColor = "mint",
     selfSize = 3,
+    selfWorldSize = 4,
     minimapButtonAngle = 0,
     rotateMap = false,
-    version = 9,
+    version = 10,
 }
 
 local COLORS = {
@@ -42,6 +44,8 @@ local POINTER_COLOR_SUFFIX = {
     white = "White",
 }
 
+local WORLD_PLAYER_PIN_SIZES = { 12, 16, 20, 24, 30 }
+
 local COLOR_ORDER = { "mint", "pink", "cyan", "lime", "yellow", "orange", "purple", "white" }
 
 local markers = {}
@@ -58,11 +62,26 @@ local function Print(message)
     DEFAULT_CHAT_FRAME:AddMessage("|cffff0a8aEasy Party Marker:|r " .. message)
 end
 
+local function GetPlayerPointerTextureFor(colorName, size)
+    local suffix = POINTER_COLOR_SUFFIX[colorName] or POINTER_COLOR_SUFFIX.mint
+    local safeSize = math.max(1, math.min(5, tonumber(size) or DEFAULTS.selfSize))
+    return POINTER_TEXTURE_PREFIX .. suffix .. safeSize
+end
+
 local function GetPlayerPointerTexture()
     local settings = EasyPartyMarkerDB or DEFAULTS
-    local suffix = POINTER_COLOR_SUFFIX[settings.selfColor] or POINTER_COLOR_SUFFIX.mint
-    local size = math.max(1, math.min(5, tonumber(settings.selfSize) or DEFAULTS.selfSize))
-    return POINTER_TEXTURE_PREFIX .. suffix .. size
+    return GetPlayerPointerTextureFor(settings.selfColor, settings.selfSize)
+end
+
+local function GetWorldPlayerPointerTexture()
+    local settings = EasyPartyMarkerDB or DEFAULTS
+    return GetPlayerPointerTextureFor(settings.selfColor, settings.selfWorldSize)
+end
+
+local function GetWorldPlayerPinSize()
+    local settings = EasyPartyMarkerDB or DEFAULTS
+    local level = math.max(1, math.min(5, tonumber(settings.selfWorldSize) or DEFAULTS.selfWorldSize))
+    return WORLD_PLAYER_PIN_SIZES[level]
 end
 
 local function DisableMinimapRotation()
@@ -83,7 +102,7 @@ local function AddRoundMask(frame, texture)
 end
 
 local function ApplyAppearance(marker)
-    local size = EasyPartyMarkerDB.size
+    local size = marker.isWorldMapMarker and EasyPartyMarkerDB.worldSize or EasyPartyMarkerDB.size
     local color = COLORS[EasyPartyMarkerDB.color] or COLORS.pink
 
     marker:SetSize(size, size)
@@ -162,7 +181,7 @@ local function ReplaceTextureObject(texture)
         return false
     end
 
-    texture:SetTexture(GetPlayerPointerTexture())
+    texture:SetTexture(GetWorldPlayerPointerTexture())
     texture:SetTexCoord(0, 1, 0, 1)
     texture:SetVertexColor(1, 1, 1, 1)
     texture:SetAlpha(1)
@@ -175,7 +194,12 @@ local function ReplaceGroupMembersPlayerTexture(pin)
         return false
     end
 
-    local ok = pcall(pin.SetPinTexture, pin, "player", GetPlayerPointerTexture())
+    local ok = pcall(pin.SetPinTexture, pin, "player", GetWorldPlayerPointerTexture())
+    if ok and pin.dataProvider and pin.dataProvider.SetUnitPinSize then
+        pcall(pin.dataProvider.SetUnitPinSize, pin.dataProvider, "player", GetWorldPlayerPinSize())
+    elseif ok and pin.SetPinSize then
+        pcall(pin.SetPinSize, pin, "player", GetWorldPlayerPinSize())
+    end
     if ok and pin.SetNeedsFullUpdate then
         pcall(pin.SetNeedsFullUpdate, pin)
     end
@@ -216,7 +240,7 @@ local function ReplacePlayerPinTextures(pin)
     end
 
     if customTexture then
-        customTexture:SetTexture(GetPlayerPointerTexture())
+        customTexture:SetTexture(GetWorldPlayerPointerTexture())
         customTexture:SetTexCoord(0, 1, 0, 1)
         customTexture:SetVertexColor(1, 1, 1, 1)
         customTexture:SetAlpha(1)
@@ -498,7 +522,7 @@ local function RefreshPlayerAppearance()
     ReplaceMinimapPlayerPointer()
     for texture in pairs(nativePlayerPointerTextures) do
         if texture and texture.SetTexture then
-            texture:SetTexture(GetPlayerPointerTexture())
+            texture:SetTexture(GetWorldPlayerPointerTexture())
         end
     end
     ReplaceWorldMapPlayerPointer()
@@ -517,6 +541,10 @@ function API.GetPlayerPointerTexture()
     return GetPlayerPointerTexture()
 end
 
+function API.GetPlayerPointerTextureFor(colorName, size)
+    return GetPlayerPointerTextureFor(colorName, size)
+end
+
 function API.SetPartyColor(colorName)
     if not COLORS[colorName] then
         return
@@ -527,6 +555,11 @@ end
 
 function API.SetPartySize(size)
     EasyPartyMarkerDB.size = math.max(6, math.min(30, math.floor((tonumber(size) or DEFAULTS.size) + 0.5)))
+    RefreshPartyAppearance()
+end
+
+function API.SetPartyWorldSize(size)
+    EasyPartyMarkerDB.worldSize = math.max(6, math.min(30, math.floor((tonumber(size) or DEFAULTS.worldSize) + 0.5)))
     RefreshPartyAppearance()
 end
 
@@ -543,6 +576,11 @@ function API.SetPlayerSize(size)
     RefreshPlayerAppearance()
 end
 
+function API.SetPlayerWorldSize(size)
+    EasyPartyMarkerDB.selfWorldSize = math.max(1, math.min(5, math.floor((tonumber(size) or DEFAULTS.selfWorldSize) + 0.5)))
+    RefreshPlayerAppearance()
+end
+
 function API.SetMinimapButtonAngle(angle)
     EasyPartyMarkerDB.minimapButtonAngle = tonumber(angle) or DEFAULTS.minimapButtonAngle
 end
@@ -550,10 +588,12 @@ end
 function API.ResetDefaults()
     EasyPartyMarkerDB.enabled = true
     EasyPartyMarkerDB.size = 10
+    EasyPartyMarkerDB.worldSize = DEFAULTS.worldSize
     EasyPartyMarkerDB.color = "pink"
     EasyPartyMarkerDB.selfEnabled = true
     EasyPartyMarkerDB.selfColor = "mint"
     EasyPartyMarkerDB.selfSize = 3
+    EasyPartyMarkerDB.selfWorldSize = DEFAULTS.selfWorldSize
     EasyPartyMarkerDB.minimapButtonAngle = DEFAULTS.minimapButtonAngle
     EasyPartyMarkerDB.rotateMap = false
     DisableMinimapRotation()
@@ -635,6 +675,12 @@ updateFrame:SetScript("OnEvent", function(_, event, loadedAddon)
             EasyPartyMarkerDB.selfSize = 3
             EasyPartyMarkerDB.minimapButtonAngle = DEFAULTS.minimapButtonAngle
             EasyPartyMarkerDB.rotateMap = false
+            EasyPartyMarkerDB.version = DEFAULTS.version
+        end
+
+        if previousVersion < 10 then
+            EasyPartyMarkerDB.worldSize = DEFAULTS.worldSize
+            EasyPartyMarkerDB.selfWorldSize = DEFAULTS.selfWorldSize
             EasyPartyMarkerDB.version = DEFAULTS.version
         end
 
