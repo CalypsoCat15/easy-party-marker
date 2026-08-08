@@ -50,6 +50,7 @@ local nativePlayerPointerTextures = setmetatable({}, { __mode = "k" })
 local updateFrame = CreateFrame("Frame")
 local elapsedSinceUpdate = 0
 local worldMapHooked = false
+local groupMembersPinHooked = false
 local lastWorldMapID
 local UpdateWorldMapMarkers
 
@@ -169,6 +170,18 @@ local function ReplaceTextureObject(texture)
     return true
 end
 
+local function ReplaceGroupMembersPlayerTexture(pin)
+    if not pin or not pin.SetPinTexture then
+        return false
+    end
+
+    local ok = pcall(pin.SetPinTexture, pin, "player", GetPlayerPointerTexture())
+    if ok and pin.SetNeedsFullUpdate then
+        pcall(pin.SetNeedsFullUpdate, pin)
+    end
+    return ok
+end
+
 local function ReplacePlayerPinTextures(pin)
     if not pin then
         return
@@ -268,6 +281,14 @@ local function ReplaceWorldMapPlayerPointer()
         return
     end
 
+    if WorldMapFrame.EnumeratePinsByTemplate then
+        pcall(function()
+            for pin in WorldMapFrame:EnumeratePinsByTemplate("GroupMembersPinTemplate") do
+                ReplaceGroupMembersPlayerTexture(pin)
+            end
+        end)
+    end
+
     for _, globalName in ipairs({
         "WorldMapPlayer",
         "WorldMapPlayerIcon",
@@ -314,7 +335,22 @@ local function ReplaceWorldMapPlayerPointer()
     RotateNativeWorldMapPointers()
 end
 
+local function HookGroupMembersPlayerPointer()
+    if groupMembersPinHooked or not hooksecurefunc or not GroupMembersPinMixin then
+        return
+    end
+
+    hooksecurefunc(GroupMembersPinMixin, "OnAcquired", function(pin)
+        if EasyPartyMarkerDB and EasyPartyMarkerDB.selfEnabled then
+            ReplaceGroupMembersPlayerTexture(pin)
+        end
+    end)
+    groupMembersPinHooked = true
+end
+
 local function HookWorldMapPointer()
+    HookGroupMembersPlayerPointer()
+
     if worldMapHooked or not WorldMapFrame or not WorldMapFrame.HookScript then
         return
     end

@@ -4,7 +4,7 @@ A customizable map-marker addon for **World of Warcraft Classic Era**, designed 
 
 Easy Party Marker makes party members and your own position much easier to spot on both the minimap and the large world map. Its signature defaults are a vivid pink party marker and a mint/seafoam directional player arrow.
 
-Version 2.1 is completely standalone: **Questie is no longer required.**
+Version 2.1 is completely standalone: **Questie is no longer required.** Version 2.1.1 also updates the large-map player arrow through Classic Era's current native player-pin API.
 
 ## Features
 
@@ -25,7 +25,7 @@ Version 2.1 is completely standalone: **Questie is no longer required.**
 
 ## Install
 
-1. Download `EasyPartyMarker-v2.1.0.zip` from the [latest release](https://github.com/CalypsoCat15/easy-party-marker/releases/latest).
+1. Download `EasyPartyMarker-v2.1.1.zip` from the [latest release](https://github.com/CalypsoCat15/easy-party-marker/releases/latest).
 2. Completely exit World of Warcraft.
 3. Open the ZIP and copy the entire `EasyPartyMarker` folder into:
 
@@ -57,4 +57,3 @@ This repository contains only addon code and marker textures. It does not contai
 ## Bundled library
 
 Easy Party Marker embeds [HereBeDragons 2.16](https://github.com/Nevcairiel/HereBeDragons/tree/2.16-release) for map-coordinate handling. See `THIRD_PARTY_NOTICES.txt` for attribution and license information.
-

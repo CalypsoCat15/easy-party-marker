@@ -1,4 +1,4 @@
-# Easy Party Marker 2.1.0
+# Easy Party Marker 2.1.1
 
 The standalone release of Easy Party Marker for World of Warcraft Classic Era.
 
@@ -6,6 +6,7 @@ The standalone release of Easy Party Marker for World of Warcraft Classic Era.
 
 - Questie is no longer required
 - Includes its own map-position helper for party markers
+- Restores the custom directional player arrow on the large map using Classic Era's current native player-pin API
 - Vivid, resizable party markers on the minimap and large world map
 - A directional player arrow that replaces the original player icon
 - Independent size and color controls for party and player markers
@@ -15,7 +16,7 @@ The standalone release of Easy Party Marker for World of Warcraft Classic Era.
 
 ## Installation
 
-1. Download `EasyPartyMarker-v2.1.0.zip` below.
+1. Download `EasyPartyMarker-v2.1.1.zip` below.
 2. Completely exit World of Warcraft.
 3. Open the ZIP and copy the entire `EasyPartyMarker` folder into your WoW Classic Era `Interface\AddOns` folder.
 4. Start the game and enable **Easy Party Marker** on the character-selection screen.

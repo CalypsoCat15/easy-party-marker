@@ -2,6 +2,7 @@
 *.zip
 !release-assets/EasyPartyMarker-v2.0.0.zip
 !release-assets/EasyPartyMarker-v2.1.0.zip
+!release-assets/EasyPartyMarker-v2.1.1.zip
 *.tmp
 *.bak
 Thumbs.db
