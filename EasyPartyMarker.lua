@@ -4,6 +4,7 @@ local API = _G.EasyPartyMarker or {}
 _G.EasyPartyMarker = API
 
 local POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrow"
+local MINIMAP_POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrowMini"
 local WORLD_POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrowWorld"
 
 local HBD = LibStub and LibStub("HereBeDragons-2.0", true)
@@ -115,6 +116,13 @@ local function GetPlayerPointerTexture()
     return GetPlayerPointerTextureFor(settings.selfColor, settings.selfSize)
 end
 
+local function GetMinimapPlayerPointerTexture()
+    local settings = EasyPartyMarkerDB or DEFAULTS
+    local suffix = POINTER_COLOR_SUFFIX[settings.selfColor] or POINTER_COLOR_SUFFIX.mint
+    local size = math.max(1, math.min(5, tonumber(settings.selfSize) or DEFAULTS.selfSize))
+    return MINIMAP_POINTER_TEXTURE_PREFIX .. suffix .. size
+end
+
 local function GetWorldPlayerPointerTexture()
     local settings = EasyPartyMarkerDB or DEFAULTS
     local suffix = POINTER_COLOR_SUFFIX[settings.selfColor] or POINTER_COLOR_SUFFIX.mint
@@ -211,7 +219,7 @@ end
 
 local function ReplaceMinimapPlayerPointer()
     if EasyPartyMarkerDB.selfEnabled and Minimap and Minimap.SetPlayerTexture then
-        Minimap:SetPlayerTexture(GetPlayerPointerTexture())
+        Minimap:SetPlayerTexture(GetMinimapPlayerPointerTexture())
     end
 end
 
@@ -262,13 +270,19 @@ local function ApplyQuestOutline(frame, texturePath)
 
     local width = math.max(1, frame:GetWidth() or 16)
     local height = math.max(1, frame:GetHeight() or 16)
-    local thickness = math.max(2, math.min(4, math.min(width, height) * 0.16))
+    local thickness
+    if frame.miniMapIcon then
+        thickness = math.max(1, math.min(1.5, math.min(width, height) * 0.08))
+    else
+        thickness = math.max(2, math.min(4, math.min(width, height) * 0.16))
+    end
     local ulx, uly, llx, lly, urx, ury, lrx, lry = frame.texture:GetTexCoord()
     local _, _, _, sourceAlpha = frame.texture:GetVertexColor()
     local textureKey = tostring(texturePath)
     local layoutChanged = frame.EPMQuestOutlineTextureKey ~= textureKey
         or frame.EPMQuestOutlineWidth ~= width
         or frame.EPMQuestOutlineHeight ~= height
+        or frame.EPMQuestOutlineThickness ~= thickness
 
     for index, offset in ipairs(QUEST_OUTLINE_OFFSETS) do
         local outline = frame.EPMQuestOutlineTextures[index]
@@ -286,6 +300,7 @@ local function ApplyQuestOutline(frame, texturePath)
     frame.EPMQuestOutlineTextureKey = textureKey
     frame.EPMQuestOutlineWidth = width
     frame.EPMQuestOutlineHeight = height
+    frame.EPMQuestOutlineThickness = thickness
     outlinedQuestFrames[frame] = true
 end
 
@@ -870,6 +885,12 @@ end)
 updateFrame:SetScript("OnUpdate", function(_, elapsed)
     if not EasyPartyMarkerDB then
         return
+    end
+
+    -- The native world-map pointer updates frequently. Match that cadence so
+    -- the large directional arrow turns smoothly instead of stepping around.
+    if WorldMapFrame and WorldMapFrame:IsShown() then
+        RotateNativeWorldMapPointers()
     end
 
     elapsedSinceUpdate = elapsedSinceUpdate + elapsed

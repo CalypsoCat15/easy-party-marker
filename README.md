@@ -13,7 +13,7 @@ Version 2.2 is completely standalone: **Questie is not required.** It updates th
 - Eight color choices: mint, pink, cyan, lime, yellow, orange, purple, and white
 - Separate minimap and large-map sizes for both marker types
 - Arrow-shaped player color choices in the customization menu
-- A tip-anchored large-map arrow: the arrow point marks your exact position
+- Tip-anchored arrows: the arrow point marks your exact position on both maps
 - Bold hot-pink outlines around Questie's `!` and `?` markers without changing their original quest-type colors
 - A draggable mint button around the minimap
 - Live customization menu; changes appear immediately
@@ -22,6 +22,7 @@ Version 2.2 is completely standalone: **Questie is not required.** It updates th
 - A bundled map-position helper, so no other addon is required
 
 Questie remains completely optional. If it is installed, Easy Party Marker adds the high-visibility quest-symbol outlines automatically.
+The minimap outline is intentionally thinner than the large-map outline so nearby quest symbols remain easy to tell apart.
 
 ## Requirements
 

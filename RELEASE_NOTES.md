@@ -10,8 +10,10 @@ The standalone release of Easy Party Marker for World of Warcraft Classic Era.
 - Gives party markers and the player arrow separate size controls for the minimap and large world map
 - Makes player color choices look like arrows in the customization menu
 - Makes the large-map player arrow easier to enlarge for improved visibility
-- Anchors the tip of the large-map arrow to the player's exact position while it rotates
+- Anchors the arrow tip to the player's exact position on both maps
+- Smooths the large-map arrow's turning
 - Adds a bold hot-pink outline to Questie's `!` and `?` markers while preserving their original colors
+- Uses a thinner quest outline on the minimap so overlapping `!` and `?` symbols remain distinct
 - A directional player arrow that replaces the original player icon
 - Independent color controls for party and player markers
 - Mint, pink, cyan, lime, yellow, orange, purple, and white color choices
