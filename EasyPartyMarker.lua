@@ -4,6 +4,7 @@ local API = _G.EasyPartyMarker or {}
 _G.EasyPartyMarker = API
 
 local POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrow"
+local WORLD_POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrowWorld"
 
 local HBD = LibStub and LibStub("HereBeDragons-2.0", true)
 local Pins = LibStub and LibStub("HereBeDragons-Pins-2.0", true)
@@ -44,9 +45,44 @@ local POINTER_COLOR_SUFFIX = {
     white = "White",
 }
 
--- The arrow artwork has transparent padding, so these native world-map pin
--- sizes are intentionally generous. The visible arrow is smaller than the box.
-local WORLD_PLAYER_PIN_SIZES = { 30, 40, 52, 66, 82 }
+-- The large-map textures keep the arrow tip at their exact center so it stays
+-- pinned to the player's position while rotating. Most of each texture is
+-- transparent, so the native pin boxes are intentionally generous.
+local WORLD_PLAYER_PIN_SIZES = { 54, 72, 96, 120, 150 }
+
+local QUEST_ICON_TYPES = {
+    [6] = true,  -- available
+    [7] = true,  -- available gray
+    [8] = true,  -- complete
+    [10] = true, -- repeatable
+    [11] = true, -- repeatable complete
+    [12] = true, -- incomplete
+    [13] = true, -- event quest
+    [14] = true, -- event quest complete
+    [15] = true, -- PvP quest
+    [16] = true, -- PvP quest complete
+}
+
+local QUEST_ICON_TEXTURE_NAMES = {
+    "available.blp",
+    "available_gray.blp",
+    "complete.blp",
+    "incomplete.blp",
+    "repeatable.blp",
+    "repeatable_complete.blp",
+    "eventquest.blp",
+    "eventquest_complete.blp",
+    "pvpquest.blp",
+    "pvpquest_complete.blp",
+}
+
+local QUEST_OUTLINE_OFFSETS = {
+    { -1, -1 }, { 0, -1 }, { 1, -1 },
+    { -1,  0 },             { 1,  0 },
+    { -1,  1 }, { 0,  1 }, { 1,  1 },
+}
+
+local QUEST_OUTLINE_COLOR = { 1.00, 0.02, 0.55 }
 
 local COLOR_ORDER = { "mint", "pink", "cyan", "lime", "yellow", "orange", "purple", "white" }
 
@@ -59,6 +95,10 @@ local worldMapHooked = false
 local groupMembersPinHooked = false
 local lastWorldMapID
 local UpdateWorldMapMarkers
+local questieFrameScanIndex = 1
+local elapsedSinceQuestieScan = 0
+local elapsedSinceQuestOutlineUpdate = 0
+local outlinedQuestFrames = setmetatable({}, { __mode = "k" })
 
 local function Print(message)
     DEFAULT_CHAT_FRAME:AddMessage("|cffff0a8aEasy Party Marker:|r " .. message)
@@ -77,9 +117,8 @@ end
 
 local function GetWorldPlayerPointerTexture()
     local settings = EasyPartyMarkerDB or DEFAULTS
-    -- Use the fullest artwork on the large map and let the native pin size
-    -- control its screen size. This keeps even the smallest option legible.
-    return GetPlayerPointerTextureFor(settings.selfColor, 5)
+    local suffix = POINTER_COLOR_SUFFIX[settings.selfColor] or POINTER_COLOR_SUFFIX.mint
+    return WORLD_POINTER_TEXTURE_PREFIX .. suffix
 end
 
 local function GetWorldPlayerPinSize()
@@ -173,6 +212,118 @@ end
 local function ReplaceMinimapPlayerPointer()
     if EasyPartyMarkerDB.selfEnabled and Minimap and Minimap.SetPlayerTexture then
         Minimap:SetPlayerTexture(GetPlayerPointerTexture())
+    end
+end
+
+local function IsQuestSymbolFrame(frame, texturePath)
+    if frame and frame.data and QUEST_ICON_TYPES[tonumber(frame.data.Icon)] then
+        return true
+    end
+
+    local path = string.lower(tostring(texturePath or ""))
+    for _, textureName in ipairs(QUEST_ICON_TEXTURE_NAMES) do
+        if string.find(path, textureName, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+local function HideQuestOutline(frame)
+    if not frame or not frame.EPMQuestOutlineTextures then
+        return
+    end
+    for _, outline in ipairs(frame.EPMQuestOutlineTextures) do
+        outline:Hide()
+    end
+    outlinedQuestFrames[frame] = nil
+end
+
+local function ApplyQuestOutline(frame, texturePath)
+    if not frame or not frame.texture or not frame.CreateTexture then
+        return
+    end
+
+    texturePath = texturePath or frame.texture:GetTexture()
+    if not IsQuestSymbolFrame(frame, texturePath) then
+        HideQuestOutline(frame)
+        return
+    end
+
+    if not frame.EPMQuestOutlineTextures then
+        frame.EPMQuestOutlineTextures = {}
+        for index = 1, #QUEST_OUTLINE_OFFSETS do
+            local outline = frame:CreateTexture(nil, "OVERLAY", nil, -2)
+            if outline.SetTexelSnappingBias then outline:SetTexelSnappingBias(0) end
+            if outline.SetSnapToPixelGrid then outline:SetSnapToPixelGrid(false) end
+            frame.EPMQuestOutlineTextures[index] = outline
+        end
+    end
+
+    local width = math.max(1, frame:GetWidth() or 16)
+    local height = math.max(1, frame:GetHeight() or 16)
+    local thickness = math.max(2, math.min(4, math.min(width, height) * 0.16))
+    local ulx, uly, llx, lly, urx, ury, lrx, lry = frame.texture:GetTexCoord()
+    local _, _, _, sourceAlpha = frame.texture:GetVertexColor()
+    local textureKey = tostring(texturePath)
+    local layoutChanged = frame.EPMQuestOutlineTextureKey ~= textureKey
+        or frame.EPMQuestOutlineWidth ~= width
+        or frame.EPMQuestOutlineHeight ~= height
+
+    for index, offset in ipairs(QUEST_OUTLINE_OFFSETS) do
+        local outline = frame.EPMQuestOutlineTextures[index]
+        if layoutChanged then
+            outline:ClearAllPoints()
+            outline:SetPoint("CENTER", frame, "CENTER", offset[1] * thickness, offset[2] * thickness)
+            outline:SetSize(width, height)
+            outline:SetTexture(texturePath)
+            outline:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
+        end
+        outline:SetVertexColor(QUEST_OUTLINE_COLOR[1], QUEST_OUTLINE_COLOR[2], QUEST_OUTLINE_COLOR[3], sourceAlpha or 1)
+        outline:Show()
+    end
+
+    frame.EPMQuestOutlineTextureKey = textureKey
+    frame.EPMQuestOutlineWidth = width
+    frame.EPMQuestOutlineHeight = height
+    outlinedQuestFrames[frame] = true
+end
+
+local function HookNewQuestieFrames()
+    if not hooksecurefunc then
+        return
+    end
+
+    while true do
+        local frame = _G["QuestieFrame" .. questieFrameScanIndex]
+        if not frame then
+            break
+        end
+
+        if not frame.EPMQuestOutlineHooked then
+            if frame.UpdateTexture then
+                hooksecurefunc(frame, "UpdateTexture", function(icon, texturePath)
+                    ApplyQuestOutline(icon, texturePath)
+                end)
+            end
+            if frame.Unload then
+                hooksecurefunc(frame, "Unload", function(icon)
+                    HideQuestOutline(icon)
+                end)
+            end
+            frame.EPMQuestOutlineHooked = true
+        end
+
+        ApplyQuestOutline(frame)
+        questieFrameScanIndex = questieFrameScanIndex + 1
+    end
+end
+
+local function RefreshQuestOutlines()
+    for frame in pairs(outlinedQuestFrames) do
+        if frame:IsShown() then
+            ApplyQuestOutline(frame)
+        end
     end
 end
 
@@ -726,6 +877,18 @@ updateFrame:SetScript("OnUpdate", function(_, elapsed)
         elapsedSinceUpdate = 0
         UpdateMarkers()
         UpdateWorldMapMarkers()
+    end
+
+    elapsedSinceQuestOutlineUpdate = elapsedSinceQuestOutlineUpdate + elapsed
+    if elapsedSinceQuestOutlineUpdate >= 0.25 then
+        elapsedSinceQuestOutlineUpdate = 0
+        RefreshQuestOutlines()
+    end
+
+    elapsedSinceQuestieScan = elapsedSinceQuestieScan + elapsed
+    if elapsedSinceQuestieScan >= 0.75 then
+        elapsedSinceQuestieScan = 0
+        HookNewQuestieFrames()
     end
 
 end)
