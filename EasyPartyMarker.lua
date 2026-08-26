@@ -4,7 +4,6 @@ local API = _G.EasyPartyMarker or {}
 _G.EasyPartyMarker = API
 
 local POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrow"
-local MINIMAP_POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrowMini"
 local WORLD_POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrowWorld"
 
 local HBD = LibStub and LibStub("HereBeDragons-2.0", true)
@@ -116,13 +115,6 @@ local function GetPlayerPointerTexture()
     return GetPlayerPointerTextureFor(settings.selfColor, settings.selfSize)
 end
 
-local function GetMinimapPlayerPointerTexture()
-    local settings = EasyPartyMarkerDB or DEFAULTS
-    local suffix = POINTER_COLOR_SUFFIX[settings.selfColor] or POINTER_COLOR_SUFFIX.mint
-    local size = math.max(1, math.min(5, tonumber(settings.selfSize) or DEFAULTS.selfSize))
-    return MINIMAP_POINTER_TEXTURE_PREFIX .. suffix .. size
-end
-
 local function GetWorldPlayerPointerTexture()
     local settings = EasyPartyMarkerDB or DEFAULTS
     local suffix = POINTER_COLOR_SUFFIX[settings.selfColor] or POINTER_COLOR_SUFFIX.mint
@@ -219,7 +211,7 @@ end
 
 local function ReplaceMinimapPlayerPointer()
     if EasyPartyMarkerDB.selfEnabled and Minimap and Minimap.SetPlayerTexture then
-        Minimap:SetPlayerTexture(GetMinimapPlayerPointerTexture())
+        Minimap:SetPlayerTexture(GetPlayerPointerTexture())
     end
 end
 
