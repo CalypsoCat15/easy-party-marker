@@ -13,7 +13,7 @@ Version 2.2 is completely standalone: **Questie is not required.** It updates th
 - Eight color choices: mint, pink, cyan, lime, yellow, orange, purple, and white
 - Separate minimap and large-map sizes for both marker types
 - Arrow-shaped player color choices in the customization menu
-- A tip-anchored large-map arrow and a smooth, centered minimap arrow
+- Smooth, centered directional arrows on both maps
 - Bold hot-pink outlines around Questie's `!` and `?` markers without changing their original quest-type colors
 - A draggable mint button around the minimap
 - Live customization menu; changes appear immediately

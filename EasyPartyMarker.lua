@@ -4,7 +4,6 @@ local API = _G.EasyPartyMarker or {}
 _G.EasyPartyMarker = API
 
 local POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrow"
-local WORLD_POINTER_TEXTURE_PREFIX = "Interface\\AddOns\\EasyPartyMarker\\Textures\\PlayerArrowWorld"
 
 local HBD = LibStub and LibStub("HereBeDragons-2.0", true)
 local Pins = LibStub and LibStub("HereBeDragons-Pins-2.0", true)
@@ -45,10 +44,9 @@ local POINTER_COLOR_SUFFIX = {
     white = "White",
 }
 
--- The large-map textures keep the arrow tip at their exact center so it stays
--- pinned to the player's position while rotating. Most of each texture is
--- transparent, so the native pin boxes are intentionally generous.
-local WORLD_PLAYER_PIN_SIZES = { 54, 72, 96, 120, 150 }
+-- The artwork has transparent padding, so these native world-map pin sizes
+-- are larger than the visible arrow itself.
+local WORLD_PLAYER_PIN_SIZES = { 30, 40, 52, 66, 82 }
 
 local QUEST_ICON_TYPES = {
     [6] = true,  -- available
@@ -117,8 +115,7 @@ end
 
 local function GetWorldPlayerPointerTexture()
     local settings = EasyPartyMarkerDB or DEFAULTS
-    local suffix = POINTER_COLOR_SUFFIX[settings.selfColor] or POINTER_COLOR_SUFFIX.mint
-    return WORLD_POINTER_TEXTURE_PREFIX .. suffix
+    return GetPlayerPointerTextureFor(settings.selfColor, 5)
 end
 
 local function GetWorldPlayerPinSize()
