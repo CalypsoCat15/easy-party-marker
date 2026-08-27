@@ -61,6 +61,14 @@ local QUEST_ICON_TYPES = {
     [16] = true, -- PvP quest complete
 }
 
+local QUEST_QUESTION_ICON_TYPES = {
+    [8] = true,  -- complete
+    [11] = true, -- repeatable complete
+    [12] = true, -- incomplete
+    [14] = true, -- event quest complete
+    [16] = true, -- PvP quest complete
+}
+
 local QUEST_ICON_TEXTURE_NAMES = {
     "available.blp",
     "available_gray.blp",
@@ -80,7 +88,8 @@ local QUEST_OUTLINE_OFFSETS = {
     { -1,  1 }, { 0,  1 }, { 1,  1 },
 }
 
-local QUEST_OUTLINE_COLOR = { 1.00, 0.02, 0.55 }
+local QUEST_EXCLAMATION_OUTLINE_COLOR = { 1.00, 0.02, 0.55 }
+local QUEST_QUESTION_OUTLINE_COLOR = { 0.38, 0.90, 0.71 }
 
 local COLOR_ORDER = { "mint", "pink", "cyan", "lime", "yellow", "orange", "purple", "white" }
 
@@ -226,6 +235,19 @@ local function IsQuestSymbolFrame(frame, texturePath)
     return false
 end
 
+local function GetQuestOutlineColor(frame, texturePath)
+    if frame and frame.data and QUEST_QUESTION_ICON_TYPES[tonumber(frame.data.Icon)] then
+        return QUEST_QUESTION_OUTLINE_COLOR
+    end
+
+    local path = string.lower(tostring(texturePath or ""))
+    if string.find(path, "complete.blp", 1, true) then
+        return QUEST_QUESTION_OUTLINE_COLOR
+    end
+
+    return QUEST_EXCLAMATION_OUTLINE_COLOR
+end
+
 local function HideQuestOutline(frame)
     if not frame or not frame.EPMQuestOutlineTextures then
         return
@@ -267,6 +289,7 @@ local function ApplyQuestOutline(frame, texturePath)
     end
     local ulx, uly, llx, lly, urx, ury, lrx, lry = frame.texture:GetTexCoord()
     local _, _, _, sourceAlpha = frame.texture:GetVertexColor()
+    local outlineColor = GetQuestOutlineColor(frame, texturePath)
     local textureKey = tostring(texturePath)
     local layoutChanged = frame.EPMQuestOutlineTextureKey ~= textureKey
         or frame.EPMQuestOutlineWidth ~= width
@@ -282,7 +305,7 @@ local function ApplyQuestOutline(frame, texturePath)
             outline:SetTexture(texturePath)
             outline:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
         end
-        outline:SetVertexColor(QUEST_OUTLINE_COLOR[1], QUEST_OUTLINE_COLOR[2], QUEST_OUTLINE_COLOR[3], sourceAlpha or 1)
+        outline:SetVertexColor(outlineColor[1], outlineColor[2], outlineColor[3], sourceAlpha or 1)
         outline:Show()
     end
 
